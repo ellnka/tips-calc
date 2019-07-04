@@ -1,163 +1,80 @@
 "use strict";
+import {InputField} from "./inputField";
+import {Result} from "./result";
+import {CheckBoxField} from "./checkBoxField";
 
-class TipCalculator {
+export class TipCalculator {
+    constructor({element}) {
+        this.$element = element;
 
-    constructor(rootElement) {
-        if (!rootElement) return;
+        this.$bill = new InputField({
+            element: this.$element.querySelector('[data-component="bill"]'),
+            precision: 2,
+            value: 100,
+            isMoreThanZero: true
+        });
+        this.$tips = new InputField({
+            element: this.$element.querySelector('[data-component="tips"]'),
+            precision: 2,
+            value: 10,
+            isMoreThanZero: false
+        });
+        this.$splitCount = new InputField({
+            element: this.$element.querySelector('[data-component="splitCount"]'),
+            precision: 0,
+            value: 2,
+            isMoreThanZero: true
+        });
 
-        this._$rootElement = rootElement;
-        this._$rootElement.innerHTML = this._getFormHTML();
-
-        this._$tips = this._$rootElement.querySelector("[data-selector='tips']");
-        this._$bill = this._$rootElement.querySelector("[data-selector='bill']");
-        this._$results = this._$rootElement.querySelector("[data-selector='results']");
-        this._$splitCount = this._$rootElement.querySelector("[data-selector='splitCount']");
-        this._$splitBetweenContainer = this._$rootElement.querySelector(".splitBetweenContainer");
-
-        this._$rootElement.onclick = this._$rootElement.onsubmit = (event) => {
-            if (event.target.tagName === "BUTTON") {
-                event.preventDefault();
-                this._submitCalculateTips();
-            }
+        this.$isBillSplit = new CheckBoxField({
+            element: this.$element.querySelector('[data-component="isBillSplit"]')
+        });
+        this.$results = {
+                total: new Result({element: this.$element.querySelector('[data-component="totalResults"]')}),
+                split: new Result({element: this.$element.querySelector('[data-component="splitResults"]')}),
         };
 
-        this._$rootElement.oncut = this._$rootElement.onpaste = (event) => {
-            if (event.target.tagName === "INPUT") {
-                this._resetResults();
-            }
-        };
+        this.$splitBetweenContainer = this.$element.querySelector('[data-selector="splitBetweenContainer"]');
 
-        this._$rootElement.onkeypress = (event) => {
-            if (event.target.tagName === "INPUT") {
-                this._resetResults();
-            }
-        };
+        this.$bill.on("inputChanged", this._inputChangedHandler.bind(this));
+        this.$tips.on("inputChanged", this._inputChangedHandler.bind(this));
+        this.$splitCount.on("inputChanged", this._inputChangedHandler.bind(this));
+        this.$isBillSplit.on("inputChanged", this._inputChangedHandler.bind(this));
+        this.$isBillSplit.on("checkBoxChanged", this._checkBoxChangedHandler.bind(this));
+        this.$element.addEventListener("submit", this._submitHandler.bind(this));
 
-        this._$rootElement.onchange = (event) => {
-            if (event.target.tagName === "INPUT") {
-                this._resetResults();
-            }
-
-            if (event.target.tagName === "INPUT" && event.target.classList.contains("float-number")) {
-                let value = Number(event.target.value);
-                event.target.value = value ? value.toFixed(2) : "0.00";
-            }
-
-            if (event.target.tagName === "INPUT" && event.target.classList.contains("int-number")) {
-                event.target.value = parseInt(event.target.value);
-            }
-
-            if (event.target.tagName === "INPUT" && event.target.classList.contains("more-than-zero")) {
-                if (Number(event.target.value) <= 0) {
-                    event.target.value = 1;
-                }
-            }
-
-            if (event.target.tagName === "INPUT" && event.target.classList.contains("checkbox")) {
-                this._$splitBetweenContainer.classList.toggle("d-none");
-                this._$splitCount.value = (this._$splitBetweenContainer.classList.contains("d-none")) ? 1 : 2;
-            }
-        };
-
-    };
-
-    _isBillSplitted() {
-        return !this._$splitBetweenContainer.classList.contains("d-none");
     }
 
-    _resetResults() {
-        this._$results.innerHTML = "";
+    _inputChangedHandler() {
+        this._hideAllResults();
     }
 
-    _submitCalculateTips() {
-        let tips = Number(this._$tips.value);
-        let bill = Number(this._$bill.value);
-        let splitCount = Number(this._$splitCount.value);
-
-        let tipsAmount = this._calculateTips(tips, bill);
-        let billAmount = bill + tipsAmount;
-        let $resultRow = this._addResultsRow("Total Bill", billAmount, "Tips Amount", tipsAmount);
-
-        this._$results.innerHTML = "";
-        this._$results.appendChild($resultRow);
-
-        if (this._isBillSplitted(splitCount)) {
-            $resultRow = this._addResultsRow("Bill Per Person", billAmount / splitCount, "Tips Per Person", tipsAmount / splitCount);
-            this._$results.appendChild($resultRow);
-        }
+    _checkBoxChangedHandler() {
+        this.$splitBetweenContainer.classList.toggle("d-none");
     }
 
-    _calculateTips(tips, bill) {
-        return bill * tips / 100;
-    }
-
-    _getFormHTML() {
-        return `
-        <form class="card-body ">
-            <div class="form-group row">
-                <label for="bill" class="col-sm-2 col-form-label">Bill </label>
-                <div class="col-sm-10 input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">$</span>
-                    </div>
-                    <input type="number" class="float-number form-control" data-selector="bill" id="bill" value = "100.00">
-                </div>
-                
-            </div>
-            <div class="form-group row">
-                <label for="tips" class="col-sm-2 col-form-label">Tips </label>
-                <div class="col-sm-10 input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">%</span>
-                    </div>
-                    <input type="number" class="float-number form-control" data-selector="tips" id="tips" value = "10.00">
-                </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-sm-2">
-                    <label class="col-form-label" for="splitBill">Split Bill </label>
-                 </div>
-                 <div class="col-sm-1">
-                    <input class="checkbox col-form-input align-bottom" type="checkbox" data-selector="splitBill" id="splitBill">     
-                </div>
-                <div id="splitBetweenContainer" class="splitBetweenContainer  d-none">
-                    <div class="col-sm-2 float-left">
-                        <label class="col-form-label" for="splitCount">Between </label>
-                     </div>
-                    <div class="col-sm-8 float-right">
-                        <input type="number" class="int-number more-than-zero form-control" data-selector = "splitCount" id="splitCount" value = "1">     
-                    </div>
-                </div>
-                
-             </div>
-            <div class="form-group row "><button type="submit" class="btn btn-primary">Calculate Tips</button></div>
-            
-            
-            <div data-selector="results"></div>
-        </form>
-        `;
-    }
-
-    _addResultsRow(labelBill, bill, labelTips, tips) {
-        let $div = document.createElement('div');
-        $div.className = "form-group row";
-        if (this._isNumber(bill) && this._isNumber(tips)) {
-            $div.innerHTML = `
-                <div class="col-sm-4 col-form-label">${labelBill} </div>
-                <div class="col-sm-6 col-form-label" data-selector="totalBill"> ${(Math.ceil((bill) * 100) / 100).toFixed(2)}$ </div>
-                <div class="col-sm-4 col-form-label">${labelTips} </div>
-                <div class="col-sm-6 col-form-label" data-selector="tipsAmount"> ${(Math.ceil((tips) * 100) / 100).toFixed(2)}$  </div>
-            `;
+    _submitHandler(event) {
+        event.preventDefault();
+        this.$results.total.updateResults(this.$tips.value, this.$bill.value);
+        this.$results.total.show();
+        if (this.$isBillSplit.value) {
+            this.$results.split.updateResults(this.$tips.value, this.$bill.value, this.$splitCount.value);
+            this.$results.split.show();
         } else {
-            $div.innerHTML = `It's not possible to calculate. Please, check entered values.`;
+            this.$results.split.updateResults(0, 0, 0);
+            this.$results.split.hide();
         }
-        return $div;
     }
 
-    _isNumber(value) {
-        return typeof value === 'number' && isFinite(value);
+    _hideAllResults() {
+        this.$results.total.hide();
+        this.$results.split.hide();
     }
+
+    _showAllResults() {
+        this.$results.total.show();
+        this.$results.split.show();
+    }
+
 
 }
-
-let tipCalculator = new TipCalculator(document.querySelector("[data-selector='container']"));

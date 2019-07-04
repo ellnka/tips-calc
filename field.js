@@ -6,9 +6,13 @@ export class Field extends Component {
     constructor({element}) {
         super({element});
 
-        this.$element.oncut = this.$element.onpaste = this.$element.onkeypress = () => {
-            this._trigger('inputChanged');
-        };
+        this.$element.addEventListener("cut", this._changeHandler.bind(this));
+        this.$element.addEventListener("paste", this._changeHandler.bind(this));
+        this.$element.addEventListener("keypress", this._changeHandler.bind(this));
+    }
+
+    _changeHandler(){
+        this._trigger('inputChanged');
     }
 
 }

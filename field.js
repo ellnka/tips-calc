@@ -2,13 +2,28 @@
 import {Component} from "./component";
 
 export class Field extends Component {
+    get value() {
+        return this._value;
+    }
 
-    constructor({element}) {
+    set value(value) {
+        this._value = value;
+    }
+
+    constructor({element, value}) {
         super({element});
 
-        this.$element.oncut = this.$element.onpaste = this.$element.onkeypress = () => {
-            this._trigger('inputChanged');
-        };
+        this._value= value;
+
+        this.$element.addEventListener("cut", this._changeHandler.bind(this));
+        this.$element.addEventListener("paste", this._changeHandler.bind(this));
+        this.$element.addEventListener("keypress", this._changeHandler.bind(this));
+    }
+
+
+
+    _changeHandler(){
+        this._trigger('inputChanged');
     }
 
 }

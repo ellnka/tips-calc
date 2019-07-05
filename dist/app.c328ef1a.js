@@ -213,9 +213,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -226,23 +230,44 @@ var Field =
 function (_Component) {
   _inherits(Field, _Component);
 
+  _createClass(Field, [{
+    key: "value",
+    get: function get() {
+      return this._value;
+    },
+    set: function set(value) {
+      this._value = value;
+    }
+  }]);
+
   function Field(_ref) {
     var _this;
 
-    var element = _ref.element;
+    var element = _ref.element,
+        value = _ref.value;
 
     _classCallCheck(this, Field);
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(Field).call(this, {
       element: element
     }));
+    _this._value = value;
 
-    _this.$element.oncut = _this.$element.onpaste = _this.$element.onkeypress = function () {
-      _this._trigger('inputChanged');
-    };
+    _this.$element.addEventListener("cut", _this._changeHandler.bind(_assertThisInitialized(_this)));
+
+    _this.$element.addEventListener("paste", _this._changeHandler.bind(_assertThisInitialized(_this)));
+
+    _this.$element.addEventListener("keypress", _this._changeHandler.bind(_assertThisInitialized(_this)));
 
     return _this;
   }
+
+  _createClass(Field, [{
+    key: "_changeHandler",
+    value: function _changeHandler() {
+      this._trigger('inputChanged');
+    }
+  }]);
 
   return Field;
 }(_component.Component);
@@ -292,27 +317,29 @@ function (_Field) {
     _classCallCheck(this, InputField);
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(InputField).call(this, {
-      element: element
+      element: element,
+      value: value
     }));
     _this.$element.value = value.toFixed(precision);
-    _this.value = value;
     _this._precision = precision;
     _this._isMoreThanZero = isMoreThanZero;
-    _this.$element.onchange = _this._changeHandler.bind(_assertThisInitialized(_this));
+
+    _this.$element.addEventListener("change", _this._changeHandler.bind(_assertThisInitialized(_this)));
+
     return _this;
   }
 
   _createClass(InputField, [{
     key: "_changeHandler",
     value: function _changeHandler() {
-      this._trigger('inputChanged');
-
       if (this._isMoreThanZero && Number(this.$element.value) <= 0) {
         this.$element.value = 1;
       }
 
       this.value = Number(this.$element.value);
       this.$element.value = this.value.toFixed(this._precision);
+
+      this._trigger('inputChanged');
     }
   }]);
 
@@ -458,21 +485,26 @@ function (_Field) {
   function CheckBoxField(_ref) {
     var _this;
 
-    var element = _ref.element;
+    var element = _ref.element,
+        value = _ref.value;
 
     _classCallCheck(this, CheckBoxField);
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(CheckBoxField).call(this, {
-      element: element
+      element: element,
+      value: value
     }));
-    _this.value = false;
-    _this.$element.onchange = _this._changeHandler.bind(_assertThisInitialized(_this));
+
+    _this.$element.addEventListener("change", _this._changeHandler.bind(_assertThisInitialized(_this)));
+
     return _this;
   }
 
   _createClass(CheckBoxField, [{
     key: "_changeHandler",
     value: function _changeHandler() {
+      this.value = !this.value;
+
       this._trigger('inputChanged', {
         detail: ""
       });
@@ -480,8 +512,6 @@ function (_Field) {
       this._trigger('checkBoxChanged', {
         detail: ""
       });
-
-      this.value = !this.value;
     }
   }]);
 
@@ -635,7 +665,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61709" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56822" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

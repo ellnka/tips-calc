@@ -41,6 +41,7 @@ export class TipCalculator {
         this.$splitCount.on("inputChanged", this._inputChangedHandler.bind(this));
         this.$isBillSplit.on("inputChanged", this._inputChangedHandler.bind(this));
         this.$isBillSplit.on("checkBoxChanged", this._checkBoxChangedHandler.bind(this));
+
         this.$element.addEventListener("submit", this._submitHandler.bind(this));
 
     }
@@ -55,8 +56,10 @@ export class TipCalculator {
 
     _submitHandler(event) {
         event.preventDefault();
+
         this.$results.total.updateResults(this.$tips.value, this.$bill.value);
         this.$results.total.show();
+
         if (this.$isBillSplit.value) {
             this.$results.split.updateResults(this.$tips.value, this.$bill.value, this.$splitCount.value);
             this.$results.split.show();

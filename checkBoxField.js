@@ -3,18 +3,18 @@ import {Field} from "./field";
 
 export class CheckBoxField extends Field {
 
-    constructor({ element}) {
-        super({element});
-        this.value = false;
+    constructor({element, value}) {
+        super({element, value});
 
-        this.$element.onchange = this._changeHandler.bind(this);
+        this.$element.addEventListener("change", this._changeHandler.bind(this));
     }
 
     _changeHandler() {
+        this.value = !this.value;
+
         this._trigger('inputChanged', {detail: ""});
         this._trigger('checkBoxChanged', {detail: ""});
 
-        this.value = !this.value;
     }
 
 }
